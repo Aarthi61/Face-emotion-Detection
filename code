@@ -1,1 +1,103 @@
+!pip install opencv-python-headless
+!pip install tensorflow opencv-python-headless
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import pathlib
+from sklearn.preprocessing import StandardScaler
+
+import cv2
+import cv2
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
+from tensorflow.keras.preprocessing.image import load_img
+from tensorflow.keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
+
+train_data_dir = pathlib.Path("D:/project2_face_emotion/Face_emotion_images/train")
+print(train_data_dir)
+
+test_data_dir = pathlib.Path("D:/project2_face_emotion/Face_emotion_images/train/validation")
+print(test_data_dir)
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
+
+# Initialize image data generator with rescaling
+train_data_gen = ImageDataGenerator(rescale=1./255)
+validation_data_gen = ImageDataGenerator(rescale=1./255)
+
+# Using the train_data_dir directory for training data
+train_generator = train_data_gen.flow_from_directory(
+    'D:/project2_face_emotion/Face_emotion_images/train',
+    target_size=(48, 48),
+    batch_size=64,
+    color_mode="grayscale",
+    class_mode='categorical'
+)
+validation_generator = ImageDataGenerator().flow_from_directory(
+    'D:/project2_face_emotion/Face_emotion_images/validation',
+    target_size=(48, 48),
+    batch_size=64,
+    color_mode="grayscale",
+    class_mode='categorical'
+)
+
+
+train_data_dir = 'path/to/train_data_directory'
+validation_data_dir = 'path/to/validation_data_directory'
+
+
+
+# create model structure
+emotion_model = Sequential([
+    Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48, 48, 1)),
+    Conv2D(64, kernel_size=(3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Dropout(0.25),
+    Conv2D(128, kernel_size=(3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(128, kernel_size=(3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Dropout(0.25),
+    Flatten(),
+    Dense(1024, activation='relu'),
+    Dropout(0.5),
+    Dense(7, activation='softmax')
+])
+
+# Compile the model
+emotion_model.compile(optimizer='adam', loss="categorical_crossentropy", metrics=['accuracy'])
+
+# Print model summary
+emotion_model.summary()
+# Train the neural network/model
+emotion_model_info = emotion_model.fit(
+    train_generator,
+    steps_per_epoch=len(train_generator),
+    epochs=15,
+    validation_data=validation_generator,
+    validation_steps=len(validation_generator)
+)
+emotion_model.save('facial_emotions_model.h5')
+
+
+from tensorflow.keras.preprocessing import image
+img_path='D:/project2_face_emotion/Face_emotion_images/validation/fear/21967.jpg' 
+test_image=image.load_img(img_path,target_size=(48,48),color_mode='grayscale') 
+test_image=image.img_to_array(test_image)
+print(test_image.shape) 
+plt.imshow(test_image) 
+plt.show()
+
+test_image=test_image.reshape(1,48,48,1) 
+classes=['Angry','Disgust','Fear','Happy','Neutral','Sad','Surprise'] 
+result=emotion_model.predict(test_image)
+print(result[0]) 
+y_pred=np.argmax(result[0])
+print('The person facial emotion is:',classes[y_pred])
 
